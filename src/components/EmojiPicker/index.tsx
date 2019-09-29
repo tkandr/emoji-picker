@@ -1,76 +1,139 @@
-import React from 'react';
-import Styled from 'styled-components';
+import React, { PureComponent } from 'react';
 import { observer } from 'mobx-react';
 
-import { useStore } from '../../store/hooks';
-import { categories } from '../../svgs';
-import { Category } from '../../types';
 import CategoryIcon from './CategoryIcon';
-import Emoji from './Emoji';
-
-const Styles = Styled.div`
-  position: absolute;
-  bottom: 3.5em;
-  right: 2em;
-  z-index: 10;
-  padding: 10px;
-  border: 3px solid #ddd;
-  border-radius: 8px;
-  .categories-list {
-    display: flex;
-    justify-content: space-between;
-    background: rgba(255, 255, 255, 0.92);
-    backdrop-filter: blur(16px);
-    margin-top: 5px;
-  }
-  .emojis-container {
-    display: flex;
-    flex-wrap: wrap;
-    height: 300px;
-    width: 270px;
-    overflow: scroll;
-  }
-`;
+import { CategoryListWrapper, MainWrapper } from './Styles';
+import Category from './Category';
+import StoreContext from '../../store/StoreContext';
+import { EmojiPickerStore } from '../../store';
 
 interface Props {
   onIconSelect: Function;
 }
 
-// eslint-disable-next-line
-const renderCategoryIcon: React.FC<Category> = ({ id }: Category) => {
-  const Icon = categories[id];
-  console.log(Icon, id);
-  return (
-    <div key={id} className="category-icon">
-      <Icon />
-    </div>
-  );
-};
+class EmojiPicker extends PureComponent<Props> {
+  static contextType = StoreContext;
 
-const EmojiPicker: React.FC<Props> = ({ onIconSelect }: Props) => {
-  const store = useStore();
-  if (!store.isOpen) {
-    return null;
+  private categoryRefs: { [key: string]: HTMLDivElement } = {};
+  private scrollContainerRef: React.RefObject<HTMLDivElement> = React.createRef<HTMLDivElement>();
+  private categoryScrollTops: number[] = [];
+  private store: EmojiPickerStore = this.context;
+  private waitingForPaint = false;
+
+  state = {
+    activeCategoryIndex: 0,
+  };
+
+  componentDidMount(): void {
+    this.calculateScrollTops();
+    if (this.scrollContainerRef.current) {
+      this.scrollContainerRef.current.addEventListener('scroll', this.handleScroll);
+    }
   }
 
-  return (
-    <Styles>
-      <div className="emojis-container">
-        {store.emojis.map(emoji => (
-          <Emoji key={emoji.char} {...emoji} />
-        ))}
-      </div>
-      <div className="categories-list">
-        {store.categories.map(category => (
-          <CategoryIcon
-            key={category.id}
-            isActive={store.activeCategoryId === category.id}
-            {...category}
-          />
-        ))}
-      </div>
-    </Styles>
-  );
-};
+  componentWillUnmount(): void {
+    if (this.scrollContainerRef.current) {
+      this.scrollContainerRef.current.removeEventListener('scroll', this.handleScroll);
+    }
+  }
+
+  calculateScrollTops(): void {
+    for (let i = 0; i < this.store.categories.length; i++) {
+      this.categoryScrollTops.push(this.calculateCategoryScrollTop(i));
+    }
+  }
+
+  calculateCategoryScrollTop(i: number): number {
+    /* eslint-disable @typescript-eslint/no-non-null-assertion */
+    if (i === 0) {
+      return 0;
+    }
+    const component = this.categoryRefs[`category-${i}`];
+
+    const elementTop = component.getBoundingClientRect().top;
+    const containerElem = this.scrollContainerRef.current;
+    const scrollContainerRefTop = containerElem!.getBoundingClientRect().top;
+    const currentScrollTop = containerElem!.scrollTop;
+    return elementTop - scrollContainerRefTop + currentScrollTop + 1;
+  }
+
+  handleScroll = (): void => {
+    if (!this.waitingForPaint) {
+      this.waitingForPaint = true;
+      window.requestAnimationFrame(this.handleScrollPaint);
+    }
+  }
+
+  handleScrollPaint = (): void => {
+    this.waitingForPaint = false;
+
+    if (!this.scrollContainerRef.current) {
+      return;
+    }
+
+    const scrollContainer = this.scrollContainerRef.current;
+    const scrollTop = scrollContainer.scrollTop;
+    const containerHeight = scrollContainer.getBoundingClientRect().height;
+
+    let activeCategoryIndex = this.categoryScrollTops.length - 1;
+    for (let i = 1; i < this.categoryScrollTops.length; i++) {
+      const top = this.categoryScrollTops[i];
+      if (top > scrollTop + containerHeight / 2) {
+        activeCategoryIndex = i - 1;
+        break;
+      }
+    }
+
+    if (this.state.activeCategoryIndex !== activeCategoryIndex) {
+      this.setState({ activeCategoryIndex });
+    }
+  }
+
+  setCategoryRef(name: string, c: HTMLDivElement): void {
+    this.categoryRefs[name] = c;
+  }
+
+  scrollToCategoryView = (i: number): void => {
+    window.requestAnimationFrame(() => {
+      if (!this.scrollContainerRef.current) {
+        return;
+      }
+      this.scrollContainerRef.current.scrollTop = this.categoryScrollTops[i];
+    });
+  };
+
+  render(): JSX.Element | null {
+    const { activeCategoryIndex } = this.state;
+    const { store } = this;
+    if (!store.isOpen) {
+      return null;
+    }
+
+    return (
+      <MainWrapper>
+        <CategoryListWrapper ref={this.scrollContainerRef}>
+          {store.categories.map((category, i) => (
+            <Category
+              ref={this.setCategoryRef.bind(this, `category-${i}`)}
+              key={category.id}
+              index={i}
+              {...category}
+            />
+          ))}
+        </CategoryListWrapper>
+        <div className="categories-anchors">
+          {store.categories.map((category, i) => (
+            <CategoryIcon
+              key={category.id}
+              onClick={() => this.scrollToCategoryView(i)}
+              isActive={activeCategoryIndex === i}
+              {...category}
+            />
+          ))}
+        </div>
+      </MainWrapper>
+    );
+  }
+}
 
 export default observer(EmojiPicker);

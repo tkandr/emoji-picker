@@ -4,9 +4,8 @@ import { Category, Emoji } from '../types';
 import { EmojiData } from '../types';
 
 export class EmojiPickerStore {
-  @observable isOpen = false;
+  @observable isOpen = true;
   @observable filterValue = '';
-  @observable activeCategoryIndex = 0;
   @observable recentlyUsed = [];
 
   private emojiData: EmojiData = emojiData;
@@ -16,35 +15,16 @@ export class EmojiPickerStore {
     return this.emojiData.categories;
   }
 
-  @computed get activeCategoryId(): string {
-    return this.categories[this.activeCategoryIndex].id;
-  }
-
-  @computed get emojis(): Emoji[] {
-    if (this.filterValue) {
-      return this.filteredEmojis;
-    }
-
-    return this.emojiData.categories[this.activeCategoryIndex].emojis.map(emojiName => {
+  categoriesEmojis = (categoryIndex: number): Emoji[] => {
+    return this.categories[categoryIndex].emojis.map(emojiName => {
       return this.emojiData.emojis[emojiName];
     });
-  }
+  };
 
   @computed get filteredEmojis(): Emoji[] {
     return this.emojiArr.filter(item => {
       return item.keywords.some(keyword => keyword.includes(this.filterValue));
     });
-  }
-
-  @action.bound setActiveCategory(categoryId: string): void {
-    const category = this.categories.find(({ id }) => id === categoryId);
-    if (!category) {
-      console.error(`Given category ${categoryId} does not exist in categories list`);
-      this.activeCategoryIndex = 0;
-      return;
-    }
-
-    this.activeCategoryIndex = this.categories.indexOf(category);
   }
 
   @action.bound toggleOpen(isOpen?: boolean): void {
