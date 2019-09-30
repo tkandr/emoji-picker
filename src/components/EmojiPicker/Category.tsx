@@ -1,11 +1,12 @@
 import React, { forwardRef } from 'react';
-import { Category as CategoryType } from '../../types/emojiData';
-import { useStore } from '../../store/hooks';
+import { Emoji as EmojiType } from '../../types/emojiData';
 import { CategoryWrapper } from './Styles';
 import Emoji from './Emoji';
 
-interface OriginalProps extends CategoryType {
-  index: number;
+interface OriginalProps {
+  name?: string;
+  emojis: EmojiType[];
+  onEmojiClick: Function;
 }
 
 interface Props extends OriginalProps {
@@ -13,16 +14,18 @@ interface Props extends OriginalProps {
 }
 
 const Category: React.FC<Props> = (props: Props) => {
-  const { categoriesEmojis } = useStore();
-
   return (
     <CategoryWrapper ref={props.forwardedRef}>
-      <div className="category-header">{props.name}</div>
-      <div className="category-emojis">
-        {categoriesEmojis(props.index).map(emoji => (
-          <Emoji key={emoji.char} {...emoji} />
-        ))}
-      </div>
+      {!!props.emojis.length && (
+        <>
+          <div className="category-header">{props.name}</div>
+          <div className="category-emojis">
+            {props.emojis.map(emoji => (
+              <Emoji onClick={props.onEmojiClick} key={emoji.id} {...emoji} />
+            ))}
+          </div>
+        </>
+      )}
     </CategoryWrapper>
   );
 };

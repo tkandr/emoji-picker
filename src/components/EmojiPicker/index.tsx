@@ -8,9 +8,10 @@ import StoreContext from '../../store/StoreContext';
 import { EmojiPickerStore } from '../../store';
 import FilterInput from './FilterInput';
 import Emoji from './Emoji';
+import { Emoji as EmojiType } from '../../types/emojiData';
 
 interface Props {
-  onIconSelect: Function;
+  onEmojiClick: Function;
 }
 
 class EmojiPicker extends PureComponent<Props> {
@@ -33,6 +34,29 @@ class EmojiPicker extends PureComponent<Props> {
     }
   }
 
+  componentDidUpdate(
+    prevProps: Readonly<Props>,
+    prevState: Readonly<{}>,
+    snapshot?: number | null,
+  ): void {
+    if (snapshot !== this.recentlyUsedHeight) {
+      this.calculateScrollTops();
+    }
+  }
+
+  getSnapshotBeforeUpdate(): number | null {
+    return this.recentlyUsedHeight;
+  }
+
+  get recentlyUsedHeight(): number | null {
+    const recentlyUsedContainer = this.categoryRefs['category-0'];
+    if (!recentlyUsedContainer || this.store.isFilterMode) {
+      return null;
+    }
+
+    return recentlyUsedContainer.getBoundingClientRect().height;
+  }
+
   componentWillUnmount(): void {
     if (this.scrollContainerRef.current) {
       this.scrollContainerRef.current.removeEventListener('scroll', this.handleScroll);
@@ -40,9 +64,11 @@ class EmojiPicker extends PureComponent<Props> {
   }
 
   calculateScrollTops(): void {
+    const tops = [];
     for (let i = 0; i < this.store.categories.length; i++) {
-      this.categoryScrollTops.push(this.calculateCategoryScrollTop(i));
+      tops.push(this.calculateCategoryScrollTop(i));
     }
+    this.categoryScrollTops = tops;
   }
 
   calculateCategoryScrollTop(i: number): number {
@@ -80,7 +106,7 @@ class EmojiPicker extends PureComponent<Props> {
     let activeCategoryIndex = this.categoryScrollTops.length - 1;
     for (let i = 1; i < this.categoryScrollTops.length; i++) {
       const top = this.categoryScrollTops[i];
-      if (top > scrollTop + containerHeight / 2) {
+      if (top > scrollTop + containerHeight * 0.1) {
         activeCategoryIndex = i - 1;
         break;
       }
@@ -99,7 +125,7 @@ class EmojiPicker extends PureComponent<Props> {
     // Don't forget to reset filter
     this.store.setFilterValue('');
     this.scrollToCategoryView(i);
-  }
+  };
 
   scrollToCategoryView = (i: number): void => {
     window.requestAnimationFrame(() => {
@@ -110,25 +136,33 @@ class EmojiPicker extends PureComponent<Props> {
     });
   };
 
+  handleEmojiClick = (emoji: EmojiType): void => {
+    this.store.addRecentlyUsed(emoji.id);
+    this.props.onEmojiClick(emoji.char);
+    this.calculateScrollTops();
+  };
+
   renderEmojis(): JSX.Element | JSX.Element[] {
-    if (this.store.isFilterMode) {
+    const { isFilterMode, categories, getCategoriesEmojis } = this.store;
+    if (isFilterMode) {
       return (
         // @todo fix lagging on search
         <CategoryWrapper>
           <div className="category-emojis">
             {this.store.filteredEmojis.map(emoji => (
-              <Emoji key={emoji.char} {...emoji} />
+              <Emoji key={emoji.id} onClick={this.handleEmojiClick} {...emoji} />
             ))}
           </div>
         </CategoryWrapper>
       );
     }
-    return this.store.categories.map((category, i) => (
+    return categories.map((category, i) => (
       <Category
         ref={this.setCategoryRef.bind(this, `category-${i}`)}
         key={category.id}
-        index={i}
-        {...category}
+        name={category.name}
+        emojis={getCategoriesEmojis(i)}
+        onEmojiClick={this.handleEmojiClick}
       />
     ));
   }

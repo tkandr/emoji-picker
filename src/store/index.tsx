@@ -6,16 +6,20 @@ import { EmojiData } from '../types';
 export class EmojiPickerStore {
   @observable isOpen = true;
   @observable filterValue = '';
-  @observable recentlyUsed = [];
+  @observable recentlyUsed: Category = {
+    id: 'recent',
+    name: 'Frequently used',
+    emojis: [],
+  };
 
   private emojiData: EmojiData = emojiData;
   private emojiArr = Object.values(emojiData.emojis); // for filtering
 
   get categories(): Category[] {
-    return this.emojiData.categories;
+    return [this.recentlyUsed, ...this.emojiData.categories];
   }
 
-  categoriesEmojis = (categoryIndex: number): Emoji[] => {
+  getCategoriesEmojis = (categoryIndex: number): Emoji[] => {
     return this.categories[categoryIndex].emojis.map(emojiName => {
       return this.emojiData.emojis[emojiName];
     });
@@ -29,6 +33,11 @@ export class EmojiPickerStore {
 
   @computed get isFilterMode(): boolean {
     return !!this.filterValue;
+  }
+
+  @action.bound addRecentlyUsed(emojiId: string): void {
+    const recentlyUsedEmojis = this.recentlyUsed.emojis.filter(key => key !== emojiId);
+    this.recentlyUsed.emojis = [emojiId, ...recentlyUsedEmojis];
   }
 
   @action.bound toggleOpen(isOpen?: boolean): void {

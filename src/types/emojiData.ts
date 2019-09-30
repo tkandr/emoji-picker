@@ -5,6 +5,7 @@ export interface Category {
 }
 
 export interface Emoji {
+  id: string;
   keywords: string[];
   char: string;
   fitzpatrick_scale: boolean;

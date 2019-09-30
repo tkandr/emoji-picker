@@ -8,7 +8,6 @@ import { Emoji, Category, EmojiData } from '../src/types';
  * find some solution if I'll have enough time
  */
 
-
 const emojilib = require('emojilib'); // eslint-disable-line
 
 const categories = [
@@ -22,7 +21,15 @@ const categories = [
   { name: 'Flags', key: 'flags' },
 ];
 
-const emojis: { [key: string]: Emoji } = emojilib.lib;
+const rawEmojis = emojilib.lib;
+Object.entries(rawEmojis).forEach(
+  ([key, emoji]: [string, any]) => {
+    emoji.id = key;
+  },
+);
+
+const emojis: { [key: string]: Emoji } = rawEmojis;
+
 const categoriesMap: { [name: string]: Category } = {};
 
 Object.entries(emojis).forEach(([emojiKey, emoji]) => {

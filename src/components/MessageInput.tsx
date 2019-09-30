@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useCallback, useState, useRef, useEffect } from 'react';
 import Styled from 'styled-components';
 import EmojiPicker from './EmojiPicker';
 import { useStore } from '../store/hooks';
@@ -7,9 +7,17 @@ const MessageInput: React.FC = () => {
   const store = useStore();
   const [inputVal, setInputVal] = useState('');
 
-  function onIconSelect(icon: string): void {
-    console.log(`${icon} selected`);
-  }
+  // some mind blowing stuff
+  // see https://reactjs.org/docs/hooks-faq.html#why-am-i-seeing-stale-props-or-state-inside-my-function
+  const prevValRef = useRef('');
+  useEffect(() => {
+    prevValRef.current = inputVal;
+  });
+
+  const handleEmoji = useCallback((char: string): void => {
+    console.log('handle input change');
+    setInputVal(prevValRef.current + char);
+  }, []);
 
   return (
     <Styles>
@@ -22,7 +30,7 @@ const MessageInput: React.FC = () => {
       <span className="image-picker-icon" onClick={() => store.toggleOpen()}>
         &#128555;
       </span>
-      <EmojiPicker onIconSelect={onIconSelect} />
+      <EmojiPicker onEmojiClick={handleEmoji} />
     </Styles>
   );
 };
