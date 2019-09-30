@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import styled from 'styled-components';
+import Styled from 'styled-components';
 import EmojiPicker from './EmojiPicker';
 import { useStore } from '../store/hooks';
 
@@ -27,7 +27,7 @@ const MessageInput: React.FC = () => {
   );
 };
 
-const Styles = styled.div`
+const Styles = Styled.div`
   display: flex;
   align-items: center;
   margin: auto;

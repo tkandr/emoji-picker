@@ -27,11 +27,19 @@ export class EmojiPickerStore {
     });
   }
 
+  @computed get isFilterMode(): boolean {
+    return !!this.filterValue;
+  }
+
   @action.bound toggleOpen(isOpen?: boolean): void {
     if (typeof isOpen === 'boolean') {
       this.isOpen = isOpen;
     }
     this.isOpen = !this.isOpen;
+  }
+
+  @action.bound setFilterValue(val: string): void {
+    this.filterValue = val;
   }
 }
 

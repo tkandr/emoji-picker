@@ -2,10 +2,12 @@ import React, { PureComponent } from 'react';
 import { observer } from 'mobx-react';
 
 import CategoryIcon from './CategoryIcon';
-import { CategoryListWrapper, MainWrapper } from './Styles';
+import { CategoryListWrapper, CategoryWrapper, MainWrapper } from './Styles';
 import Category from './Category';
 import StoreContext from '../../store/StoreContext';
 import { EmojiPickerStore } from '../../store';
+import FilterInput from './FilterInput';
+import Emoji from './Emoji';
 
 interface Props {
   onIconSelect: Function;
@@ -62,7 +64,7 @@ class EmojiPicker extends PureComponent<Props> {
       this.waitingForPaint = true;
       window.requestAnimationFrame(this.handleScrollPaint);
     }
-  }
+  };
 
   handleScrollPaint = (): void => {
     this.waitingForPaint = false;
@@ -87,10 +89,16 @@ class EmojiPicker extends PureComponent<Props> {
     if (this.state.activeCategoryIndex !== activeCategoryIndex) {
       this.setState({ activeCategoryIndex });
     }
-  }
+  };
 
   setCategoryRef(name: string, c: HTMLDivElement): void {
     this.categoryRefs[name] = c;
+  }
+
+  handleCategoryIconClick = (i: number): void => {
+    // Don't forget to reset filter
+    this.store.setFilterValue('');
+    this.scrollToCategoryView(i);
   }
 
   scrollToCategoryView = (i: number): void => {
@@ -102,6 +110,29 @@ class EmojiPicker extends PureComponent<Props> {
     });
   };
 
+  renderEmojis(): JSX.Element | JSX.Element[] {
+    if (this.store.isFilterMode) {
+      return (
+        // @todo fix lagging on search
+        <CategoryWrapper>
+          <div className="category-emojis">
+            {this.store.filteredEmojis.map(emoji => (
+              <Emoji key={emoji.char} {...emoji} />
+            ))}
+          </div>
+        </CategoryWrapper>
+      );
+    }
+    return this.store.categories.map((category, i) => (
+      <Category
+        ref={this.setCategoryRef.bind(this, `category-${i}`)}
+        key={category.id}
+        index={i}
+        {...category}
+      />
+    ));
+  }
+
   render(): JSX.Element | null {
     const { activeCategoryIndex } = this.state;
     const { store } = this;
@@ -111,22 +142,16 @@ class EmojiPicker extends PureComponent<Props> {
 
     return (
       <MainWrapper>
+        <FilterInput />
         <CategoryListWrapper ref={this.scrollContainerRef}>
-          {store.categories.map((category, i) => (
-            <Category
-              ref={this.setCategoryRef.bind(this, `category-${i}`)}
-              key={category.id}
-              index={i}
-              {...category}
-            />
-          ))}
+          {this.renderEmojis()}
         </CategoryListWrapper>
         <div className="categories-anchors">
           {store.categories.map((category, i) => (
             <CategoryIcon
               key={category.id}
-              onClick={() => this.scrollToCategoryView(i)}
-              isActive={activeCategoryIndex === i}
+              onClick={() => this.handleCategoryIconClick(i)}
+              isActive={!store.isFilterMode && activeCategoryIndex === i}
               {...category}
             />
           ))}

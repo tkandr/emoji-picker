@@ -1,9 +1,9 @@
 import Styled from 'styled-components';
 
 const emojiWidth = 30;
+const emojiHeight = emojiWidth;
 const emojiRightMargin = 6;
 const emojisInRow = 7;
-const flexBasisPercent = (100 * (emojiWidth - emojiRightMargin)) / emojiWidth / emojisInRow;
 const emojiContainerWidth = (emojiWidth + emojiRightMargin) * emojisInRow;
 
 export const MainWrapper = Styled.div`
@@ -24,8 +24,8 @@ export const MainWrapper = Styled.div`
 `;
 
 export const EmojiWrapper = Styled.div`
-  height: 30px;
-  flex-basis: ${flexBasisPercent}%;
+  height: ${emojiHeight}px;
+  flex-basis: ${emojiWidth}px;
   font-size: 21px;
   line-height: 30px;
   margin-right: ${emojiRightMargin}px;
