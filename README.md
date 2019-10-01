@@ -1,3 +1,8 @@
+## To do
+1. Prevent whole component rerendering after `activeCategoryIndex` change <br>
+2. Render of whole emojis takes to long. It's visible when switching between search and normal modes
+<br> <br>
+
 This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
 
 ## Available Scripts
