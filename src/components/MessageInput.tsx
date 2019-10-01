@@ -1,10 +1,8 @@
 import React, { useCallback, useState, useRef, useEffect } from 'react';
 import Styled from 'styled-components';
 import EmojiPicker from './EmojiPicker';
-import { useStore } from '../store/hooks';
 
 const MessageInput: React.FC = () => {
-  const store = useStore();
   const [inputVal, setInputVal] = useState('');
 
   // some mind blowing stuff
@@ -27,9 +25,7 @@ const MessageInput: React.FC = () => {
         placeholder="Write a message..."
         onChange={event => setInputVal(event.target.value)}
       />
-      <span className="image-picker-icon" onClick={() => store.toggleOpen()}>
-        &#128555;
-      </span>
+      <span className="image-picker-icon">&#128555;</span>
       <EmojiPicker onEmojiClick={handleEmoji} />
     </Styles>
   );

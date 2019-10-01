@@ -14,6 +14,7 @@ export const MainWrapper = Styled.div`
   padding: 10px;
   border: 3px solid #ddd;
   border-radius: 8px;
+  background-color: white;
   .categories-anchors {
     display: flex;
     justify-content: space-between;

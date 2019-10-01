@@ -50,7 +50,7 @@ class EmojiPicker extends PureComponent<Props> {
 
   get recentlyUsedHeight(): number | null {
     const recentlyUsedContainer = this.categoryRefs['category-0'];
-    if (!recentlyUsedContainer || this.store.isFilterMode) {
+    if (!recentlyUsedContainer) {
       return null;
     }
 
@@ -64,6 +64,9 @@ class EmojiPicker extends PureComponent<Props> {
   }
 
   calculateScrollTops(): void {
+    if (this.store.isFilterMode) {
+      return;
+    }
     const tops = [];
     for (let i = 0; i < this.store.categories.length; i++) {
       tops.push(this.calculateCategoryScrollTop(i));
@@ -77,6 +80,9 @@ class EmojiPicker extends PureComponent<Props> {
       return 0;
     }
     const component = this.categoryRefs[`category-${i}`];
+    if (!component) {
+      return 0;
+    }
 
     const elementTop = component.getBoundingClientRect().top;
     const containerElem = this.scrollContainerRef.current;
@@ -139,7 +145,6 @@ class EmojiPicker extends PureComponent<Props> {
   handleEmojiClick = (emoji: EmojiType): void => {
     this.store.addRecentlyUsed(emoji.id);
     this.props.onEmojiClick(emoji.char);
-    this.calculateScrollTops();
   };
 
   renderEmojis(): JSX.Element | JSX.Element[] {
@@ -170,9 +175,6 @@ class EmojiPicker extends PureComponent<Props> {
   render(): JSX.Element | null {
     const { activeCategoryIndex } = this.state;
     const { store } = this;
-    if (!store.isOpen) {
-      return null;
-    }
 
     return (
       <MainWrapper>

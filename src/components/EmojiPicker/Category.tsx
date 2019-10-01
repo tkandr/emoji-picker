@@ -30,7 +30,10 @@ const Category: React.FC<Props> = (props: Props) => {
   );
 };
 
-// eslint-disable-next-line react/display-name
-export default forwardRef((props: OriginalProps, ref: React.Ref<HTMLDivElement>) => {
+const ForwardedCategory = forwardRef((props: OriginalProps, ref: React.Ref<HTMLDivElement>) => {
   return <Category {...props} forwardedRef={ref} />;
 });
+
+ForwardedCategory.displayName = Category.displayName;
+
+export default ForwardedCategory;

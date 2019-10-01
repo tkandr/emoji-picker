@@ -4,7 +4,6 @@ import { Category, Emoji } from '../types';
 import { EmojiData } from '../types';
 
 export class EmojiPickerStore {
-  @observable isOpen = true;
   @observable filterValue = '';
   @observable recentlyUsed: Category = {
     id: 'recent',
@@ -38,13 +37,6 @@ export class EmojiPickerStore {
   @action.bound addRecentlyUsed(emojiId: string): void {
     const recentlyUsedEmojis = this.recentlyUsed.emojis.filter(key => key !== emojiId);
     this.recentlyUsed.emojis = [emojiId, ...recentlyUsedEmojis];
-  }
-
-  @action.bound toggleOpen(isOpen?: boolean): void {
-    if (typeof isOpen === 'boolean') {
-      this.isOpen = isOpen;
-    }
-    this.isOpen = !this.isOpen;
   }
 
   @action.bound setFilterValue(val: string): void {
