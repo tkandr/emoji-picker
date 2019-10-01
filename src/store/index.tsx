@@ -8,15 +8,13 @@ export class EmojiPickerStore {
   @observable recentlyUsed: Category = {
     id: 'recent',
     name: 'Frequently used',
-    emojis: [],
+    emojis: [emojiData.emojis.smile.id],
   };
 
   private emojiData: EmojiData = emojiData;
   private emojiArr = Object.values(emojiData.emojis); // for filtering
 
-  get categories(): Category[] {
-    return [this.recentlyUsed, ...this.emojiData.categories];
-  }
+  categories: Category[] = [this.recentlyUsed, ...this.emojiData.categories];
 
   getCategoriesEmojis = (categoryIndex: number): Emoji[] => {
     return this.categories[categoryIndex].emojis.map(emojiName => {
